@@ -1,1 +1,145 @@
-"local TweenService = game:GetService(\"TweenService\")\r\n\r\nlocal plr = game.Players.LocalPlayer\r\n\r\nlocal _LeavesFarmConnection\r\nlocal _LeavesFarmActive = false\r\nlocal _LeavesQueue = {}\r\n\r\nlocal CONFIG = {\r\n    LeavesFarmSpeed = 70\r\n}\r\n\r\nlocal function tweenCharacterTo(point, duration)\r\n    if not plr.Character then return end\r\n    if not plr.Character.PrimaryPart then return end\r\n\r\n    local Val = Instance.new(\"CFrameValue\")\r\n    Val.Value = plr.Character:GetPivot()\r\n\r\n    Val:GetPropertyChangedSignal(\"Value\"):Connect(function()\r\n        plr.Character:PivotTo(Val.Value)\r\n    end)\r\n\r\n    TweenService:Create(Val, TweenInfo.new(duration or 5, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {Value = point}):Play()\r\n\r\n    game:GetService(\"Debris\"):AddItem(Val, duration or 5)\r\n\r\n    task.wait(duration or 5)\r\n\r\nend\r\n\r\n\r\nlocal function getNearestLeaf(list)\r\n\r\n    if not plr.Character then return list[1] end\r\n\r\n    local nearestLeaf, nearestDistance = nil, nil\r\n\r\n    for _, i in list do\r\n        \r\n        if not i.Parent then continue end\r\n\r\n        local distance = (plr.Character:GetPivot().Position - i.Parent:GetPivot().Position).Magnitude\r\n\r\n        if not nearestLeaf or not nearestDistance or (distance \u003C nearestDistance) then\r\n            nearestLeaf = i\r\n            nearestDistance = distance\r\n        end\r\n\r\n    end\r\n\r\n    return nearestLeaf, nearestDistance\r\nend\r\n\r\nlocal function startFarmLeaves()\r\n    table.clear(_LeavesQueue)\r\n\r\n    _LeavesFarmConnection = workspace.DescendantAdded:Connect(function(child)\r\n        if child:IsA(\"ParticleEmitter\") and child.Name == \"LeafBurst\" then\r\n            table.insert(_LeavesQueue, child)\r\n        end\r\n    end)\r\n\r\n    task.wait(5)\r\n\r\n    _LeavesFarmActive = true\r\n\r\n    local CurrentLeaf = nil\r\n\r\n    while _LeavesFarmActive and task.wait() do\r\n        \r\n\r\n        if #_LeavesQueue == 0 then continue end\r\n\r\n        if CurrentLeaf then continue end\r\n\r\n\r\n        local nearest, distance = getNearestLeaf(_LeavesQueue)\r\n        if not nearest or not nearest.Parent then continue end\r\n\r\n        if distance > 1000 then continue end\r\n\r\n        CurrentLeaf = nearest\r\n\r\n        tweenCharacterTo(CurrentLeaf.Parent:GetPivot() + Vector3.new(0, 2, 0), distance / CONFIG.LeavesFarmSpeed)\r\n\r\n        local startTick = tick()\r\n\r\n        while CurrentLeaf and CurrentLeaf ~= nil and CurrentLeaf.Parent and tick() - startTick \u003C= 5 do\r\n            task.wait()\r\n        end\r\n\r\n        table.remove(_LeavesQueue, table.find(_LeavesQueue, CurrentLeaf))\r\n        CurrentLeaf = nil\r\n    end\r\n\r\n    \r\n\r\n\r\n\r\nend\r\n\r\nlocal function stopFarmLeaves()\r\n    if _LeavesFarmConnection then\r\n        _LeavesFarmConnection:Disconnect()\r\n    end\r\n    _LeavesFarmActive = false\r\nend\r\n\r\n\r\n\r\n\r\nlocal OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()\r\n\r\nlocal Window = OrionLib:MakeWindow({Name = \"Chikaritos BSS\", HidePremium = false, SaveConfig = false})\r\n\r\nlocal TabFarm = Window:MakeTab({Name =\"Farm\", Icon = \"rbxassetid://4483345998\"})\r\n\r\nlocal FarmSection = TabFarm:AddSection({Name = \"Farm\"})\r\n\r\nlocal ToggleLeaves = FarmSection:AddToggle({\r\n    Name = \"Farm Leaves\",\r\n    Callback = function(state)\r\n        if state then\r\n            startFarmLeaves()\r\n        else\r\n            stopFarmLeaves()\r\n        end\r\n    end\r\n})\r\n\r\nFarmSection:AddSlider({\r\n\tName = \"Leaves Farm Speed\",\r\n\tMin = 20,\r\n\tMax = 150,\r\n\tDefault = CONFIG.LeavesFarmSpeed,\r\n\tColor = Color3.fromRGB(95,255,95),\r\n\tIncrement = 1,\r\n\tValueName = \"m/s\",\r\n\tCallback = function(Value)\r\n\t\tCONFIG.LeavesFarmSpeed = Value\r\n\tend    \r\n})\r\n\r\nOrionLib:Init()"
+local TweenService = game:GetService("TweenService")
+
+local plr = game.Players.LocalPlayer
+
+local _LeavesFarmConnection
+local _LeavesFarmActive = false
+local _LeavesQueue = {}
+
+local CONFIG = {
+    LeavesFarmSpeed = 70
+}
+
+local function tweenCharacterTo(point, duration)
+    if not plr.Character then return end
+    if not plr.Character.PrimaryPart then return end
+
+    local Val = Instance.new("CFrameValue")
+    Val.Value = plr.Character:GetPivot()
+
+    Val:GetPropertyChangedSignal("Value"):Connect(function()
+        plr.Character:PivotTo(Val.Value)
+    end)
+
+    TweenService:Create(Val, TweenInfo.new(duration or 5, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {Value = point}):Play()
+
+    game:GetService("Debris"):AddItem(Val, duration or 5)
+
+    task.wait(duration or 5)
+
+end
+
+
+local function getNearestLeaf(list)
+
+    if not plr.Character then return list[1] end
+
+    local nearestLeaf, nearestDistance = nil, nil
+
+    for _, i in list do
+        
+        if not i.Parent then continue end
+
+        local distance = (plr.Character:GetPivot().Position - i.Parent:GetPivot().Position).Magnitude
+
+        if not nearestLeaf or not nearestDistance or (distance < nearestDistance) then
+            nearestLeaf = i
+            nearestDistance = distance
+        end
+
+    end
+
+    return nearestLeaf, nearestDistance
+end
+
+local function startFarmLeaves()
+    table.clear(_LeavesQueue)
+
+    _LeavesFarmConnection = workspace.DescendantAdded:Connect(function(child)
+        if child:IsA("ParticleEmitter") and child.Name == "LeafBurst" then
+            table.insert(_LeavesQueue, child)
+        end
+    end)
+
+    task.wait(5)
+
+    _LeavesFarmActive = true
+
+    local CurrentLeaf = nil
+
+    while _LeavesFarmActive and task.wait() do
+        
+
+        if #_LeavesQueue == 0 then continue end
+
+        if CurrentLeaf then continue end
+
+
+        local nearest, distance = getNearestLeaf(_LeavesQueue)
+        if not nearest or not nearest.Parent then continue end
+
+        if distance > 1000 then continue end
+
+        CurrentLeaf = nearest
+
+        tweenCharacterTo(CurrentLeaf.Parent:GetPivot() + Vector3.new(0, 2, 0), distance / CONFIG.LeavesFarmSpeed)
+
+        local startTick = tick()
+
+        while CurrentLeaf and CurrentLeaf ~= nil and CurrentLeaf.Parent and tick() - startTick <= 5 do
+            task.wait()
+        end
+
+        table.remove(_LeavesQueue, table.find(_LeavesQueue, CurrentLeaf))
+        CurrentLeaf = nil
+    end
+
+    
+
+
+
+end
+
+local function stopFarmLeaves()
+    if _LeavesFarmConnection then
+        _LeavesFarmConnection:Disconnect()
+    end
+    _LeavesFarmActive = false
+end
+
+
+
+
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
+local Window = OrionLib:MakeWindow({Name = "Chikaritos BSS", HidePremium = false, SaveConfig = false})
+
+local TabFarm = Window:MakeTab({Name ="Farm", Icon = "rbxassetid://4483345998"})
+
+local FarmSection = TabFarm:AddSection({Name = "Farm"})
+
+local ToggleLeaves = FarmSection:AddToggle({
+    Name = "Farm Leaves",
+    Callback = function(state)
+        if state then
+            startFarmLeaves()
+        else
+            stopFarmLeaves()
+        end
+    end
+})
+
+FarmSection:AddSlider({
+	Name = "Leaves Farm Speed",
+	Min = 20,
+	Max = 150,
+	Default = CONFIG.LeavesFarmSpeed,
+	Color = Color3.fromRGB(95,255,95),
+	Increment = 1,
+	ValueName = "m/s",
+	Callback = function(Value)
+		CONFIG.LeavesFarmSpeed = Value
+	end    
+})
+
+OrionLib:Init()
